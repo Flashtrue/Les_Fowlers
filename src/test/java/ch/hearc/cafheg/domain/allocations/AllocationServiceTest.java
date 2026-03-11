@@ -4,6 +4,8 @@ import ch.hearc.cafheg.domain.common.Montant;
 import ch.hearc.cafheg.infrastructure.persistence.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistence.AllocationMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -11,7 +13,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -69,6 +73,165 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getCanton()).isEqualTo(Canton.FR),
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
+  }
+
+  @Nested
+  @DisplayName("Tests pour getParentDroitAllocation")
+  class GetParentDroitAllocationTests {
+
+    @Test
+    @DisplayName("Cas 1: Parent1 a une activité lucrative, Parent2 non -> Parent1")
+    void parent1AvecActiviteLucrative_Parent2Sans_RetourneParent1() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", true);
+      params.put("parent2ActiviteLucrative", false);
+      params.put("parent1Salaire", new BigDecimal("5000"));
+      params.put("parent2Salaire", new BigDecimal("0"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    @DisplayName("Cas 2: Parent2 a une activité lucrative, Parent1 non -> Parent2")
+    void parent2AvecActiviteLucrative_Parent1Sans_RetourneParent2() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", false);
+      params.put("parent2ActiviteLucrative", true);
+      params.put("parent1Salaire", new BigDecimal("0"));
+      params.put("parent2Salaire", new BigDecimal("5000"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 3: Les deux ont une activité lucrative, Parent1 salaire supérieur -> Parent1")
+    void deuxAvecActiviteLucrative_Parent1SalaireSuperieur_RetourneParent1() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", true);
+      params.put("parent2ActiviteLucrative", true);
+      params.put("parent1Salaire", new BigDecimal("6000"));
+      params.put("parent2Salaire", new BigDecimal("5000"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    @DisplayName("Cas 4: Les deux ont une activité lucrative, Parent2 salaire supérieur -> Parent2")
+    void deuxAvecActiviteLucrative_Parent2SalaireSuperieur_RetourneParent2() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", true);
+      params.put("parent2ActiviteLucrative", true);
+      params.put("parent1Salaire", new BigDecimal("4000"));
+      params.put("parent2Salaire", new BigDecimal("5000"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 5: Les deux ont une activité lucrative, salaires égaux -> Parent2")
+    void deuxAvecActiviteLucrative_SalairesEgaux_RetourneParent2() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", true);
+      params.put("parent2ActiviteLucrative", true);
+      params.put("parent1Salaire", new BigDecimal("5000"));
+      params.put("parent2Salaire", new BigDecimal("5000"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 6: Aucun n'a d'activité lucrative, Parent1 salaire supérieur -> Parent1")
+    void aucunAvecActiviteLucrative_Parent1SalaireSuperieur_RetourneParent1() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", false);
+      params.put("parent2ActiviteLucrative", false);
+      params.put("parent1Salaire", new BigDecimal("3000"));
+      params.put("parent2Salaire", new BigDecimal("2000"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    @DisplayName("Cas 7: Aucun n'a d'activité lucrative, Parent2 salaire supérieur -> Parent2")
+    void aucunAvecActiviteLucrative_Parent2SalaireSuperieur_RetourneParent2() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", false);
+      params.put("parent2ActiviteLucrative", false);
+      params.put("parent1Salaire", new BigDecimal("2000"));
+      params.put("parent2Salaire", new BigDecimal("3000"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 8: Aucun n'a d'activité lucrative, salaires égaux -> Parent2")
+    void aucunAvecActiviteLucrative_SalairesEgaux_RetourneParent2() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", false);
+      params.put("parent2ActiviteLucrative", false);
+      params.put("parent1Salaire", new BigDecimal("2000"));
+      params.put("parent2Salaire", new BigDecimal("2000"));
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 9: Map vide (valeurs par défaut) -> Parent2")
+    void mapVide_UtiliseValeursParDefaut_RetourneParent2() {
+      Map<String, Object> params = new HashMap<>();
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      // Avec valeurs par défaut: false, false, 0, 0 -> comparaison salaire -> Parent2
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 10: Vérifie que les paramètres de résidence ne sont pas utilisés")
+    void parametresResidenceNonUtilises_ResultatInchange() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", true);
+      params.put("parent2ActiviteLucrative", false);
+      // Ces paramètres ne devraient pas affecter le résultat
+      params.put("enfantResidence", "NE");
+      params.put("parent1Residence", "NE");
+      params.put("parent2Residence", "FR");
+      params.put("parentsEnsemble", false);
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    @DisplayName("Cas 11: Test avec Integer au lieu de BigDecimal pour salaire")
+    void salairesAvecInteger_FonctionneCorrectement() {
+      Map<String, Object> params = new HashMap<>();
+      params.put("parent1ActiviteLucrative", true);
+      params.put("parent2ActiviteLucrative", true);
+      params.put("parent1Salaire", 6000);
+      params.put("parent2Salaire", 5000);
+
+      String result = allocationService.getParentDroitAllocation(params);
+
+      assertThat(result).isEqualTo("Parent1");
+    }
   }
 
 }
