@@ -1,0 +1,22 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: cafheg
+
+  datasource:
+    url: "jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:cafheg}?serverTimezone=UTC"
+    username: "${POSTGRES_USER:cafheg}"
+    password: "${POSTGRES_PASSWORD:secret}"
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    locations: "classpath:db/migration"
+    enabled: true
+    clean-disabled: true
