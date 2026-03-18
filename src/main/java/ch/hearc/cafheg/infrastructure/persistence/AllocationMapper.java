@@ -19,7 +19,7 @@ public class AllocationMapper extends Mapper {
   private static final String QUERY_FIND_ALL = "SELECT * FROM ALLOCATIONS";
   private static final Logger logger = LoggerFactory.getLogger(AllocationMapper.class);
   public List<Allocation> findAll() {
-    logger.info("recherche des allocs");
+    logger.debug("recherche des allocs");
     Connection connection = activeJDBCConnection();
     try {
       logger.debug("SQL: " + QUERY_FIND_ALL);
