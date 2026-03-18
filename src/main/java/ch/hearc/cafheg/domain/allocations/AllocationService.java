@@ -2,6 +2,9 @@ package ch.hearc.cafheg.domain.allocations;
 
 import ch.hearc.cafheg.infrastructure.persistence.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistence.AllocationMapper;
+import ch.hearc.cafheg.infrastructure.persistence.EnfantMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,7 +17,7 @@ public class AllocationService {
 
   private final AllocataireMapper allocataireMapper;
   private final AllocationMapper allocationMapper;
-
+  private static final Logger logger = LoggerFactory.getLogger(AllocationService.class);
   public AllocationService(
       AllocataireMapper allocataireMapper,
       AllocationMapper allocationMapper) {
@@ -23,7 +26,8 @@ public class AllocationService {
   }
 
   public List<Allocataire> findAllAllocataires(String likeNom) {
-    System.out.println("Rechercher tous les allocataires");
+    logger.info("Déterminer quel parent a le droit aux allocations");
+
     return allocataireMapper.findAll(likeNom);
   }
 
@@ -32,7 +36,7 @@ public class AllocationService {
   }
 
   public String getParentDroitAllocation(Map<String, Object> parameters) {
-    System.out.println("Déterminer quel parent a le droit aux allocations");
+    logger.info("Déterminer quel parent a le droit aux allocations");
     String eR = (String)parameters.getOrDefault("enfantResidence", "");
     Boolean p1AL = (Boolean)parameters.getOrDefault("parent1ActiviteLucrative", false);
     String p1Residence = (String)parameters.getOrDefault("parent1Residence", "");

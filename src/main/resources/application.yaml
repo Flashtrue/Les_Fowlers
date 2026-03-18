@@ -9,7 +9,7 @@ spring:
     name: cafheg
 
   datasource:
-    url: "jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:cafheg}?serverTimezone=UTC"
+    url: "jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:cafheg}?serverTimezone=UTC"
     username: "${POSTGRES_USER:cafheg}"
     password: "${POSTGRES_PASSWORD:secret}"
     driver-class-name: org.postgresql.Driver

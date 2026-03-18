@@ -13,12 +13,14 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PDFExporter {
 
     private final EnfantMapper enfantMapper;
     private final static PDType1Font DEFAULT_FONT;
-
+    private static final Logger logger = LoggerFactory.getLogger(PDFExporter.class);
     static {
         DEFAULT_FONT = new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
     }
@@ -29,7 +31,7 @@ public class PDFExporter {
 
     public byte[] generatePDFVversement(Allocataire allocataire,
             Map<LocalDate, Montant> montantParMois) {
-        System.out.println("Génération du PDF des versements");
+        logger.debug("Génération du PDF des versements");
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PDDocument document = new PDDocument();
@@ -68,7 +70,7 @@ public class PDFExporter {
             document.save(baos);
             document.close();
 
-            System.out.println("PDF généré");
+            logger.debug("PDF généré");
             return baos.toByteArray();
 
 
@@ -80,8 +82,7 @@ public class PDFExporter {
 
     public byte[] generatePDFAllocataire(Allocataire allocataire,
             Map<Long, Montant> montantsParEnfant) {
-        System.out.println("Génération du PDF pour un allocataire");
-
+        logger.debug("Génération du PDF pour un allocataire");
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PDDocument document = new PDDocument();
@@ -122,8 +123,7 @@ public class PDFExporter {
 
             document.save(baos);
             document.close();
-
-            System.out.println("PDF généré");
+            logger.debug("PDF généré");
             return baos.toByteArray();
         } catch (
                 IOException e) {
