@@ -13,9 +13,11 @@ import ch.hearc.cafheg.infrastructure.persistence.VersementMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -90,5 +92,18 @@ public class RESTController {
         headers.add("Content-Disposition", "attachment; filename=\"versements_" + allocataireId + ".pdf\"");
         headers.add("Access-Control-Expose-Headers", "Content-Disposition");
         return ResponseEntity.ok().headers(headers).body(pdf);
+    }
+
+    @DeleteMapping("/allocataires/{allocataireId}")
+    public ResponseEntity<Void> deleteAllocataire(@PathVariable("allocataireId") long allocataireId) {
+        try {
+            boolean deleted = inTransaction(() -> allocationService.deleteAllocataire(allocataireId));
+            if (!deleted) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Allocataire introuvable");
+            }
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
     }
 }

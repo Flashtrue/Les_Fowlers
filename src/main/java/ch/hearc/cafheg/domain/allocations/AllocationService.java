@@ -31,6 +31,14 @@ public class AllocationService {
     return allocationMapper.findAll();
   }
 
+  public boolean deleteAllocataire(long allocataireId) {
+    System.out.println("Supprimer l'allocataire " + allocataireId);
+    if (allocataireMapper.hasVersements(allocataireId)) {
+      throw new IllegalStateException("Un allocataire avec des versements ne peut pas être supprimé");
+    }
+    return allocataireMapper.deleteById(allocataireId);
+  }
+  
   public String getParentDroitAllocation(DroitAllocationRequest request) {
     System.out.println("Déterminer quel parent a le droit aux allocations");
     Objects.requireNonNull(request, "La requete ne peut pas etre nulle");

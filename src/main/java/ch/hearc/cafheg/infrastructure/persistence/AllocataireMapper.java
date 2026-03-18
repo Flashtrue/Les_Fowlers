@@ -15,6 +15,8 @@ public class AllocataireMapper extends Mapper {
   private static final String QUERY_FIND_ALL = "SELECT NOM,PRENOM,NO_AVS FROM ALLOCATAIRES";
   private static final String QUERY_FIND_WHERE_NOM_LIKE = "SELECT NOM,PRENOM,NO_AVS FROM ALLOCATAIRES WHERE NOM LIKE ?";
   private static final String QUERY_FIND_WHERE_NUMERO = "SELECT NO_AVS, NOM, PRENOM FROM ALLOCATAIRES WHERE NUMERO=?";
+  private static final String QUERY_EXISTS_VERSEMENT_FOR_ALLOCATAIRE = "SELECT EXISTS(SELECT 1 FROM VERSEMENTS WHERE FK_ALLOCATAIRES = ?)";
+  private static final String QUERY_DELETE_BY_NUMERO = "DELETE FROM ALLOCATAIRES WHERE NUMERO=?";
 
   public List<Allocataire> findAll(String likeNom) {
     System.out.println("findAll() " + likeNom);
@@ -66,6 +68,34 @@ public class AllocataireMapper extends Mapper {
       System.out.println("Allocataire mapping");
       return new Allocataire(new NoAVS(resultSet.getString(1)),
           resultSet.getString(2), resultSet.getString(3));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public boolean hasVersements(long allocataireId) {
+    System.out.println("hasVersements() " + allocataireId);
+    Connection connection = activeJDBCConnection();
+    try {
+      PreparedStatement preparedStatement = connection.prepareStatement(QUERY_EXISTS_VERSEMENT_FOR_ALLOCATAIRE);
+      preparedStatement.setLong(1, allocataireId);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (!resultSet.next()) {
+        return false;
+      }
+      return resultSet.getBoolean(1);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public boolean deleteById(long id) {
+    System.out.println("deleteById() " + id);
+    Connection connection = activeJDBCConnection();
+    try {
+      PreparedStatement preparedStatement = connection.prepareStatement(QUERY_DELETE_BY_NUMERO);
+      preparedStatement.setLong(1, id);
+      return preparedStatement.executeUpdate() > 0;
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
