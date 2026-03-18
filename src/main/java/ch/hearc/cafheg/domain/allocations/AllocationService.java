@@ -5,7 +5,7 @@ import ch.hearc.cafheg.infrastructure.persistence.AllocationMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 public class AllocationService {
 
@@ -31,16 +31,20 @@ public class AllocationService {
     return allocationMapper.findAll();
   }
 
-  public String getParentDroitAllocation(Map<String, Object> parameters) {
+  public String getParentDroitAllocation(DroitAllocationRequest request) {
     System.out.println("Déterminer quel parent a le droit aux allocations");
-    String eR = (String)parameters.getOrDefault("enfantResidence", "");
-    Boolean p1AL = (Boolean)parameters.getOrDefault("parent1ActiviteLucrative", false);
-    String p1Residence = (String)parameters.getOrDefault("parent1Residence", "");
-    Boolean p2AL = (Boolean)parameters.getOrDefault("parent2ActiviteLucrative", false);
-    String p2Residence = (String)parameters.getOrDefault("parent2Residence", "");
-    Boolean pEnsemble = (Boolean)parameters.getOrDefault("parentsEnsemble", false);
-    Number salaireP1 = (Number) parameters.getOrDefault("parent1Salaire", BigDecimal.ZERO);
-    Number salaireP2 = (Number) parameters.getOrDefault("parent2Salaire", BigDecimal.ZERO);
+    Objects.requireNonNull(request, "La requete ne peut pas etre nulle");
+
+    Boolean p1AL = Objects.requireNonNull(request.parent1ActiviteLucrative(),
+                                          "parent1ActiviteLucrative est requis");
+    Boolean p2AL = Objects.requireNonNull(request.parent2ActiviteLucrative(),
+                                          "parent2ActiviteLucrative est requis");
+    BigDecimal salaireP1 = Objects.requireNonNull(request.parent1Salaire(), "parent1Salaire est requis");
+    BigDecimal salaireP2 = Objects.requireNonNull(request.parent2Salaire(), "parent2Salaire est requis");
+
+    if (salaireP1.signum() < 0 || salaireP2.signum() < 0) {
+      throw new IllegalArgumentException("Les salaires doivent etre positifs ou nuls");
+    }
 
     if(p1AL && !p2AL) {
       return PARENT_1;
@@ -50,6 +54,6 @@ public class AllocationService {
       return PARENT_2;
     }
 
-    return salaireP1.doubleValue() > salaireP2.doubleValue() ? PARENT_1 : PARENT_2;
+    return salaireP1.compareTo(salaireP2) > 0 ? PARENT_1 : PARENT_2;
   }
 }
