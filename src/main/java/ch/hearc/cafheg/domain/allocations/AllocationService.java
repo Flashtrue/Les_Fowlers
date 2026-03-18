@@ -38,6 +38,19 @@ public class AllocationService {
     }
     return allocataireMapper.deleteById(allocataireId);
   }
+
+  public Allocataire updateAllocataire(long allocataireId, String nouveauNom, String nouveauPrenom) {
+    System.out.println("Modifier l'allocataire " + allocataireId);
+    Allocataire existant = allocataireMapper.findById(allocataireId);
+    if (existant == null) {
+      return null;
+    }
+    if (existant.getNom().equals(nouveauNom) && existant.getPrenom().equals(nouveauPrenom)) {
+      throw new IllegalArgumentException("Le nom et le prénom sont identiques, aucune modification effectuée");
+    }
+    allocataireMapper.updateById(allocataireId, nouveauNom, nouveauPrenom);
+    return new Allocataire(existant.getNoAVS(), nouveauNom, nouveauPrenom);
+  }
   
   public String getParentDroitAllocation(DroitAllocationRequest request) {
     System.out.println("Déterminer quel parent a le droit aux allocations");

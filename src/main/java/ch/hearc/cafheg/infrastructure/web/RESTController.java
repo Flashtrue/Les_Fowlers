@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static ch.hearc.cafheg.infrastructure.persistence.Database.inTransaction;
 
@@ -104,6 +105,23 @@ public class RESTController {
             return ResponseEntity.noContent().build();
         } catch (IllegalStateException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+    }
+
+    @PutMapping("/allocataires/{allocataireId}")
+    public ResponseEntity<Allocataire> updateAllocataire(
+            @PathVariable("allocataireId") long allocataireId,
+            @RequestBody Map<String, String> body) {
+        try {
+            String nom = body.get("nom");
+            String prenom = body.get("prenom");
+            Allocataire updated = inTransaction(() -> allocationService.updateAllocataire(allocataireId, nom, prenom));
+            if (updated == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Allocataire introuvable");
+            }
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 }

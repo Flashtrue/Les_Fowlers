@@ -17,6 +17,7 @@ public class AllocataireMapper extends Mapper {
   private static final String QUERY_FIND_WHERE_NUMERO = "SELECT NO_AVS, NOM, PRENOM FROM ALLOCATAIRES WHERE NUMERO=?";
   private static final String QUERY_EXISTS_VERSEMENT_FOR_ALLOCATAIRE = "SELECT EXISTS(SELECT 1 FROM VERSEMENTS WHERE FK_ALLOCATAIRES = ?)";
   private static final String QUERY_DELETE_BY_NUMERO = "DELETE FROM ALLOCATAIRES WHERE NUMERO=?";
+  private static final String QUERY_UPDATE_BY_NUMERO = "UPDATE ALLOCATAIRES SET NOM=?, PRENOM=? WHERE NUMERO=?";
 
   public List<Allocataire> findAll(String likeNom) {
     System.out.println("findAll() " + likeNom);
@@ -95,6 +96,20 @@ public class AllocataireMapper extends Mapper {
     try {
       PreparedStatement preparedStatement = connection.prepareStatement(QUERY_DELETE_BY_NUMERO);
       preparedStatement.setLong(1, id);
+      return preparedStatement.executeUpdate() > 0;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public boolean updateById(long id, String nom, String prenom) {
+    System.out.println("updateById() " + id);
+    Connection connection = activeJDBCConnection();
+    try {
+      PreparedStatement preparedStatement = connection.prepareStatement(QUERY_UPDATE_BY_NUMERO);
+      preparedStatement.setString(1, nom);
+      preparedStatement.setString(2, prenom);
+      preparedStatement.setLong(3, id);
       return preparedStatement.executeUpdate() > 0;
     } catch (SQLException e) {
       throw new RuntimeException(e);
