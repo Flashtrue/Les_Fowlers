@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 class AllocationServiceTest {
@@ -73,6 +74,42 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getCanton()).isEqualTo(Canton.FR),
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
+  }
+
+  @Test
+  void deleteAllocataire_WhenNoVersements_ShouldDeleteAndReturnTrue() {
+    Mockito.when(allocataireMapper.hasVersements(42L)).thenReturn(false);
+    Mockito.when(allocataireMapper.deleteById(42L)).thenReturn(true);
+
+    boolean deleted = allocationService.deleteAllocataire(42L);
+
+    assertThat(deleted).isTrue();
+    Mockito.verify(allocataireMapper).hasVersements(42L);
+    Mockito.verify(allocataireMapper).deleteById(42L);
+  }
+
+  @Test
+  void deleteAllocataire_WhenHasVersements_ShouldThrowAndNotDelete() {
+    Mockito.when(allocataireMapper.hasVersements(42L)).thenReturn(true);
+
+    assertThatThrownBy(() -> allocationService.deleteAllocataire(42L))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("ne peut pas être supprimé");
+
+    Mockito.verify(allocataireMapper).hasVersements(42L);
+    Mockito.verify(allocataireMapper, Mockito.never()).deleteById(Mockito.anyLong());
+  }
+
+  @Test
+  void deleteAllocataire_WhenNotFoundAndNoVersement_ShouldReturnFalse() {
+    Mockito.when(allocataireMapper.hasVersements(99L)).thenReturn(false);
+    Mockito.when(allocataireMapper.deleteById(99L)).thenReturn(false);
+
+    boolean deleted = allocationService.deleteAllocataire(99L);
+
+    assertThat(deleted).isFalse();
+    Mockito.verify(allocataireMapper).hasVersements(99L);
+    Mockito.verify(allocataireMapper).deleteById(99L);
   }
 
   @Nested
