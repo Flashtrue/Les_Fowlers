@@ -3,6 +3,7 @@ package ch.hearc.cafheg.infrastructure.web;
 import ch.hearc.cafheg.domain.allocations.Allocataire;
 import ch.hearc.cafheg.domain.allocations.Allocation;
 import ch.hearc.cafheg.domain.allocations.AllocationService;
+import ch.hearc.cafheg.domain.allocations.DroitAllocationRequest;
 import ch.hearc.cafheg.domain.versements.VersementService;
 import ch.hearc.cafheg.infrastructure.pdf.PDFExporter;
 import ch.hearc.cafheg.infrastructure.persistence.AllocataireMapper;
@@ -10,6 +11,7 @@ import ch.hearc.cafheg.infrastructure.persistence.AllocationMapper;
 import ch.hearc.cafheg.infrastructure.persistence.EnfantMapper;
 import ch.hearc.cafheg.infrastructure.persistence.VersementMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 import static ch.hearc.cafheg.infrastructure.persistence.Database.inTransaction;
 
@@ -39,9 +40,6 @@ public class RESTController {
     // Headers de la requête HTTP doit contenir "Content-Type: application/json"
     // BODY de la requête HTTP à transmettre afin de tester le endpoint
     {
-        "enfantResidence" : "Neuchâtel",
-        "parent1Residence" : "Neuchâtel",
-        "parent2Residence" : "Bienne",
         "parent1ActiviteLucrative" : true,
         "parent2ActiviteLucrative" : true,
         "parent1Salaire" : 2500,
@@ -49,8 +47,8 @@ public class RESTController {
     }
      */
     @PostMapping("/droits/quel-parent")
-    public String getParentDroitAllocation(@RequestBody Map<String, Object> params) {
-        return inTransaction(() -> allocationService.getParentDroitAllocation(params));
+    public String getParentDroitAllocation(@Valid @RequestBody DroitAllocationRequest request) {
+        return inTransaction(() -> allocationService.getParentDroitAllocation(request));
     }
 
     @GetMapping("/allocataires")

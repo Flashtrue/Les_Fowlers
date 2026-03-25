@@ -4,6 +4,8 @@ import ch.hearc.cafheg.domain.common.Montant;
 import ch.hearc.cafheg.infrastructure.persistence.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistence.AllocationMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -14,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 class AllocationServiceTest {
@@ -69,6 +72,112 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getCanton()).isEqualTo(Canton.FR),
         () -> assertThat(all.get(1).getDebut()).isEqualTo(LocalDate.now()),
         () -> assertThat(all.get(1).getFin()).isNull());
+  }
+
+  @Nested
+  @DisplayName("Tests pour getParentDroitAllocation")
+  class GetParentDroitAllocationTests {
+
+    private DroitAllocationRequest request(boolean p1Activite, boolean p2Activite, String salaireP1,
+                                           String salaireP2) {
+      return new DroitAllocationRequest(p1Activite, p2Activite,
+                                        new BigDecimal(salaireP1),
+                                        new BigDecimal(salaireP2));
+    }
+
+    @Test
+    @DisplayName("Cas 1: Parent1 a une activité lucrative, Parent2 non -> Parent1")
+    void parent1AvecActiviteLucrative_Parent2Sans_RetourneParent1() {
+      String result = allocationService.getParentDroitAllocation(request(true, false, "5000", "0"));
+
+      assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    @DisplayName("Cas 2: Parent2 a une activité lucrative, Parent1 non -> Parent2")
+    void parent2AvecActiviteLucrative_Parent1Sans_RetourneParent2() {
+      String result = allocationService.getParentDroitAllocation(request(false, true, "0", "5000"));
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 3: Les deux ont une activité lucrative, Parent1 salaire supérieur -> Parent1")
+    void deuxAvecActiviteLucrative_Parent1SalaireSuperieur_RetourneParent1() {
+      String result = allocationService.getParentDroitAllocation(request(true, true, "6000", "5000"));
+
+      assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    @DisplayName("Cas 4: Les deux ont une activité lucrative, Parent2 salaire supérieur -> Parent2")
+    void deuxAvecActiviteLucrative_Parent2SalaireSuperieur_RetourneParent2() {
+      String result = allocationService.getParentDroitAllocation(request(true, true, "4000", "5000"));
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 5: Les deux ont une activité lucrative, salaires égaux -> Parent2")
+    void deuxAvecActiviteLucrative_SalairesEgaux_RetourneParent2() {
+      String result = allocationService.getParentDroitAllocation(request(true, true, "5000", "5000"));
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 6: Aucun n'a d'activité lucrative, Parent1 salaire supérieur -> Parent1")
+    void aucunAvecActiviteLucrative_Parent1SalaireSuperieur_RetourneParent1() {
+      String result = allocationService.getParentDroitAllocation(request(false, false, "3000", "2000"));
+
+      assertThat(result).isEqualTo("Parent1");
+    }
+
+    @Test
+    @DisplayName("Cas 7: Aucun n'a d'activité lucrative, Parent2 salaire supérieur -> Parent2")
+    void aucunAvecActiviteLucrative_Parent2SalaireSuperieur_RetourneParent2() {
+      String result = allocationService.getParentDroitAllocation(request(false, false, "2000", "3000"));
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 8: Aucun n'a d'activité lucrative, salaires égaux -> Parent2")
+    void aucunAvecActiviteLucrative_SalairesEgaux_RetourneParent2() {
+      String result = allocationService.getParentDroitAllocation(request(false, false, "2000", "2000"));
+
+      assertThat(result).isEqualTo("Parent2");
+    }
+
+    @Test
+    @DisplayName("Cas 9: Requête nulle -> exception explicite")
+    void requeteNulle_LeveExceptionClaire() {
+      assertThatThrownBy(() -> allocationService.getParentDroitAllocation(null))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("La requete ne peut pas etre nulle");
+    }
+
+    @Test
+    @DisplayName("Cas 10: Champ obligatoire manquant -> exception explicite")
+    void champObligatoireManquant_LeveExceptionClaire() {
+      DroitAllocationRequest request = new DroitAllocationRequest(true, false, null, new BigDecimal("0"));
+
+      assertThatThrownBy(() -> allocationService.getParentDroitAllocation(request))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("parent1Salaire est requis");
+    }
+
+    @Test
+    @DisplayName("Cas 11: Salaire negatif -> IllegalArgumentException")
+    void salaireNegatif_LeveIllegalArgumentException() {
+      DroitAllocationRequest request = new DroitAllocationRequest(true, true,
+                                                                  new BigDecimal("-1"),
+                                                                  new BigDecimal("5000"));
+
+      assertThatThrownBy(() -> allocationService.getParentDroitAllocation(request))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("Les salaires doivent etre positifs ou nuls");
+    }
   }
 
 }
