@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  Dataset DBUnit pour les tests d'intégration.
+  ALLOCATAIRE 1 (Deguzman Kendrick) : possède un versement → suppression interdite
+  ALLOCATAIRE 2 (Maclin Tien)       : sans versement → suppression autorisée
+-->
+<dataset>
+    <ALLOCATAIRES NUMERO="1" NO_AVS="756.1558.5343.97" NOM="Deguzman" PRENOM="Kendrick"/>
+    <ALLOCATAIRES NUMERO="2" NO_AVS="756.4284.5291.11" NOM="Maclin"   PRENOM="Tien"/>
+    <VERSEMENTS NUMERO="1" FK_ALLOCATAIRES="1" DATE_VERSEMENT="2024-01-01" MOIS_VERSEMENT="2024-01-01"/>
+</dataset>

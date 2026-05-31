@@ -74,6 +74,99 @@ class AllocationServiceTest {
         () -> assertThat(all.get(1).getFin()).isNull());
   }
 
+  @Test
+  void deleteAllocataire_WhenNoVersements_ShouldDeleteAndReturnTrue() {
+    Mockito.when(allocataireMapper.hasVersements(42L)).thenReturn(false);
+    Mockito.when(allocataireMapper.deleteById(42L)).thenReturn(true);
+
+    boolean deleted = allocationService.deleteAllocataire(42L);
+
+    assertThat(deleted).isTrue();
+    Mockito.verify(allocataireMapper).hasVersements(42L);
+    Mockito.verify(allocataireMapper).deleteById(42L);
+  }
+
+  @Test
+  void deleteAllocataire_WhenHasVersements_ShouldThrowAndNotDelete() {
+    Mockito.when(allocataireMapper.hasVersements(42L)).thenReturn(true);
+
+    assertThatThrownBy(() -> allocationService.deleteAllocataire(42L))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("ne peut pas être supprimé");
+
+    Mockito.verify(allocataireMapper).hasVersements(42L);
+    Mockito.verify(allocataireMapper, Mockito.never()).deleteById(Mockito.anyLong());
+  }
+
+  @Test
+  void deleteAllocataire_WhenNotFoundAndNoVersement_ShouldReturnFalse() {
+    Mockito.when(allocataireMapper.hasVersements(99L)).thenReturn(false);
+    Mockito.when(allocataireMapper.deleteById(99L)).thenReturn(false);
+
+    boolean deleted = allocationService.deleteAllocataire(99L);
+
+    assertThat(deleted).isFalse();
+    Mockito.verify(allocataireMapper).hasVersements(99L);
+    Mockito.verify(allocataireMapper).deleteById(99L);
+  }
+
+  @Nested
+  @DisplayName("Tests pour updateAllocataire")
+  class UpdateAllocataireTests {
+
+    @Test
+    @DisplayName("Modification nom et prénom -> retourne l'allocataire mis à jour")
+    void updateAllocataire_WhenNomAndPrenomChanged_ShouldReturnUpdated() {
+      Allocataire existant = new Allocataire(new NoAVS("1000-2000"), "Dupont", "Jean");
+      Mockito.when(allocataireMapper.findById(1L)).thenReturn(existant);
+      Mockito.when(allocataireMapper.updateById(1L, "Martin", "Pierre")).thenReturn(true);
+
+      Allocataire result = allocationService.updateAllocataire(1L, "Martin", "Pierre");
+
+      assertThat(result.getNom()).isEqualTo("Martin");
+      assertThat(result.getPrenom()).isEqualTo("Pierre");
+      assertThat(result.getNoAVS()).isEqualTo(new NoAVS("1000-2000"));
+      Mockito.verify(allocataireMapper).updateById(1L, "Martin", "Pierre");
+    }
+
+    @Test
+    @DisplayName("Modification uniquement du nom -> retourne l'allocataire mis à jour")
+    void updateAllocataire_WhenOnlyNomChanged_ShouldReturnUpdated() {
+      Allocataire existant = new Allocataire(new NoAVS("1000-2000"), "Dupont", "Jean");
+      Mockito.when(allocataireMapper.findById(1L)).thenReturn(existant);
+      Mockito.when(allocataireMapper.updateById(1L, "Martin", "Jean")).thenReturn(true);
+
+      Allocataire result = allocationService.updateAllocataire(1L, "Martin", "Jean");
+
+      assertThat(result.getNom()).isEqualTo("Martin");
+      assertThat(result.getPrenom()).isEqualTo("Jean");
+    }
+
+    @Test
+    @DisplayName("Même nom et prénom -> IllegalArgumentException")
+    void updateAllocataire_WhenNomAndPrenomIdentical_ShouldThrow() {
+      Allocataire existant = new Allocataire(new NoAVS("1000-2000"), "Dupont", "Jean");
+      Mockito.when(allocataireMapper.findById(1L)).thenReturn(existant);
+
+      assertThatThrownBy(() -> allocationService.updateAllocataire(1L, "Dupont", "Jean"))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("aucune modification");
+
+      Mockito.verify(allocataireMapper, Mockito.never()).updateById(Mockito.anyLong(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    @DisplayName("Allocataire introuvable -> retourne null")
+    void updateAllocataire_WhenNotFound_ShouldReturnNull() {
+      Mockito.when(allocataireMapper.findById(99L)).thenReturn(null);
+
+      Allocataire result = allocationService.updateAllocataire(99L, "Martin", "Pierre");
+
+      assertThat(result).isNull();
+      Mockito.verify(allocataireMapper, Mockito.never()).updateById(Mockito.anyLong(), Mockito.any(), Mockito.any());
+    }
+  }
+
   @Nested
   @DisplayName("Tests pour getParentDroitAllocation")
   class GetParentDroitAllocationTests {

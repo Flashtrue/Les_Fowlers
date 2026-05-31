@@ -2,13 +2,11 @@ package ch.hearc.cafheg.domain.allocations;
 
 import ch.hearc.cafheg.infrastructure.persistence.AllocataireMapper;
 import ch.hearc.cafheg.infrastructure.persistence.AllocationMapper;
-import ch.hearc.cafheg.infrastructure.persistence.EnfantMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class AllocationService {
@@ -36,6 +34,27 @@ public class AllocationService {
     return allocationMapper.findAll();
   }
 
+  public boolean deleteAllocataire(long allocataireId) {
+    logger.info("Supprimer l'allocataire {}", allocataireId);
+    if (allocataireMapper.hasVersements(allocataireId)) {
+      throw new IllegalStateException("Un allocataire avec des versements ne peut pas être supprimé");
+    }
+    return allocataireMapper.deleteById(allocataireId);
+  }
+
+  public Allocataire updateAllocataire(long allocataireId, String nouveauNom, String nouveauPrenom) {
+    logger.info("Modifier l'allocataire {}", allocataireId);
+    Allocataire existant = allocataireMapper.findById(allocataireId);
+    if (existant == null) {
+      return null;
+    }
+    if (existant.getNom().equals(nouveauNom) && existant.getPrenom().equals(nouveauPrenom)) {
+      throw new IllegalArgumentException("Le nom et le prénom sont identiques, aucune modification effectuée");
+    }
+    allocataireMapper.updateById(allocataireId, nouveauNom, nouveauPrenom);
+    return new Allocataire(existant.getNoAVS(), nouveauNom, nouveauPrenom);
+  }
+  
   public String getParentDroitAllocation(DroitAllocationRequest request) {
     logger.info("Déterminer quel parent a le droit aux allocations");
     Objects.requireNonNull(request, "La requete ne peut pas etre nulle");
